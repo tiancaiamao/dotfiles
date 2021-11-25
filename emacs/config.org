@@ -1,0 +1,96 @@
+#+AUTHOR: Arthur Mao
+#+EMAIL: tiancaiamao@gmail.com
+#+PROPERTY: header-args :results silent
+
+* Configure =use-package=
+
+Download Evil, this is the 
+
+#+BEGIN_SRC emacs-lisp
+  (unless (package-installed-p 'evil)
+    (package-install 'evil))
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (setq exec-path (append exec-path '("/home/genius/go/bin/")))
+#+END_SRC
+
+* UI Settings
+
+** Use a better theme than the default one
+
+#+BEGIN_SRC emacs-lisp
+  (load-theme 'monokai t)
+#+END_SRC
+
+** Disable the startup message
+
+#+BEGIN_SRC emacs-lisp
+  (setq inhibit-startup-message t)
+#+END_SRC
+
+** Tool bar and menu bar are useless, disable them.
+
+#+BEGIN_SRC emacs-lisp
+(menu-bar-mode 0)
+(tool-bar-mode 0)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+(fset 'yes-or-no-p 'y-or-n-p)
+#+END_SRC
+
+* Key Bindings
+
+Evil and Leader key makes life less boring!
+
+#+BEGIN_SRC emacs-lisp
+  (setq evil-want-C-u-scroll t)
+  (require 'evil)
+  (require 'evil-leader)
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (setq evil-leader/in-all-states 1)
+  (global-evil-leader-mode)
+  (evil-mode 1)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (evil-leader/set-leader "<SPC>")
+  (evil-leader/set-key
+    ";" 'comment-or-uncomment-region
+    "ff" 'find-file
+    "fj" 'dired-jump
+    "fs" 'save-buffer
+    "bb" 'buffer-menu
+    "bd" 'kill-buffer
+    "bp" 'previous-buffer
+    "bn" 'next-buffer
+    "w/" 'split-window-horizontally
+    "w-" 'split-window-vertically
+    "wj" 'windmove-down
+    "wk" 'windmove-up
+    "wh" 'windmove-left
+    "wl" 'windmove-right
+    "wd" 'delete-window
+    "ww" 'other-window
+    "xk" 'kill-buffer
+    "xf" 'find-file
+    "50" 'delete-frame
+    )
+#+END_SRC
+
+* Project management
+
+I'm not sure what it is for now, but I'll figure it out one day.
+
+#+BEGIN_SRC emacs-lisp 
+(require 'projectile)
+#+END_SRC 
+
+#+BEGIN_SRC emacs-lisp 
+(server-start)
+#+END_SRC 

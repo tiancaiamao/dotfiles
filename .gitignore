@@ -1,5 +1,5 @@
 emacs/dot-emacs.d/*
-!emacs/dot-emacs.d/configuration.org
+!emacs/dot-emacs.d/config.org
 !emacs/dot-emacs.d/init.el
 !emacs/dot-emacs.d/resources
 !emacs/dot-emacs.d/snippets
