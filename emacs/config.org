@@ -2,18 +2,28 @@
 #+EMAIL: tiancaiamao@gmail.com
 #+PROPERTY: header-args :results silent
 
-* Configure =use-package=
+* Setup =use-package=
 
-Download Evil, this is the 
+Ensure that use-package is installed.
+If use-package isn't already installed, it's extremely likely that this is a
+fresh installation! So we'll want to update the package repository and
+install use-package before loading the literate configuration.
+
+#+BEGIN_SRC emacs-lisp
+  (when (not (package-installed-p 'use-package))
+    (package-refresh-contents)
+    (package-install 'use-package))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (setq use-package-always-ensure t)
+#+END_SRC
+
+Download and install evil, 
 
 #+BEGIN_SRC emacs-lisp
   (unless (package-installed-p 'evil)
     (package-install 'evil))
-#+END_SRC
-
-
-#+BEGIN_SRC emacs-lisp
-  (setq exec-path (append exec-path '("/home/genius/go/bin/")))
 #+END_SRC
 
 * UI Settings
@@ -21,7 +31,9 @@ Download Evil, this is the
 ** Use a better theme than the default one
 
 #+BEGIN_SRC emacs-lisp
-  (load-theme 'monokai t)
+  (use-package monokai-theme
+    :config
+    (load-theme 'monokai t))
 #+END_SRC
 
 ** Disable the startup message
@@ -33,29 +45,58 @@ Download Evil, this is the
 ** Tool bar and menu bar are useless, disable them.
 
 #+BEGIN_SRC emacs-lisp
-(menu-bar-mode 0)
-(tool-bar-mode 0)
+  (menu-bar-mode 0)
+  (tool-bar-mode 0)
+  (scroll-bar-mode 0)
 #+END_SRC
 
+Make the =yes or no= shorter.
+
 #+BEGIN_SRC emacs-lisp
-(fset 'yes-or-no-p 'y-or-n-p)
+  (fset 'yes-or-no-p 'y-or-n-p)
 #+END_SRC
 
 * Key Bindings
 
-Evil and Leader key makes life less boring!
+Yes, I use evil, the VIM keybinding makes life easier!
 
 #+BEGIN_SRC emacs-lisp
-  (setq evil-want-C-u-scroll t)
-  (require 'evil)
-  (require 'evil-leader)
+  (use-package evil
+    :init
+    (setq evil-want-abbrev-expand-on-insert-exit nil
+	  ;; evil-want-C-u-scroll t
+	  ;; evil-want-integration t
+	  ;; evil-collection will handle the key mapping, it requires this setting
+	  evil-want-keybinding nil
+	  )
+
+    :config
+    (evil-mode 1))
 #+END_SRC
 
 
+package =evil-collection= comes with the magit evil keybinding.
+
+#+begin_src emacs-lisp
+  (use-package evil-collection
+    :after evil
+    :custom
+    (evil-collection-setup-minibuffer t)
+    :config
+    ;; (setq evil-collection-mode-list
+    ;;       '(ag dired magit mu4e which-key))
+    (evil-collection-init))
+#+end_src
+
+The leader key binding!
+
 #+BEGIN_SRC emacs-lisp
-  (setq evil-leader/in-all-states 1)
-  (global-evil-leader-mode)
-  (evil-mode 1)
+  (use-package evil-leader
+    :init
+    (setq evil-leader/in-all-states 1)
+
+    :config
+    (global-evil-leader-mode))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -69,8 +110,9 @@ Evil and Leader key makes life less boring!
     "bd" 'kill-buffer
     "bp" 'previous-buffer
     "bn" 'next-buffer
-    "w/" 'split-window-horizontally
+    "w" 'evil-window-map
     "w-" 'split-window-vertically
+    "w/" 'split-window-horizontally
     "wj" 'windmove-down
     "wk" 'windmove-up
     "wh" 'windmove-left
@@ -80,17 +122,102 @@ Evil and Leader key makes life less boring!
     "xk" 'kill-buffer
     "xf" 'find-file
     "50" 'delete-frame
+    "gg" 'magit-status
+    "p" 'projectile-command-map
+    "oe" 'eshell
     )
 #+END_SRC
 
+* Programming language
+
+** Go
+
+#+begin_src emacs-lisp
+  (use-package go-mode)
+#+end_src
+
+** Lisp
+
+
+#+begin_src emacs-lisp
+  (use-package elisp-mode
+    :ensure nil
+    :bind
+    (:map emacs-lisp-mode-map
+	  ("C-c C-c" . me/eval-region-dwim)
+	  :map lisp-interaction-mode-map
+	  ("C-c C-c" . me/eval-region-dwim))
+    :hook
+    (emacs-lisp-mode . outline-minor-mode))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package lisp-mode
+    :ensure nil
+    :mode ((rx ".eld" eos) . lisp-data-mode))
+#+end_src
+
+** C
+
+** Markdown
+
+#+begin_src emacs-lisp
+  (use-package markdown-mode
+    :mode (rx (or "INSTALL" "CONTRIBUTORS" "LICENSE" "README" ".mdx") eos)
+    :bind
+    (:map markdown-mode-map
+	  ("M-n" . nil)
+	  ("M-p" . nil))
+    :hook
+    (markdown-mode . me/hydra-set-super)
+    :custom
+    (markdown-asymmetric-header t)
+    (markdown-split-window-direction 'right)
+    :config
+    (unbind-key "M-<down>" markdown-mode-map)
+    (unbind-key "M-<up>" markdown-mode-map))
+#+end_src
+
+** YAML
+
+#+begin_src emacs-lisp
+  (use-package yaml-mode)
+#+end_src
+
 * Project management
+
+** projectile 
 
 I'm not sure what it is for now, but I'll figure it out one day.
 
 #+BEGIN_SRC emacs-lisp 
-(require 'projectile)
+  (use-package projectile)
 #+END_SRC 
+
+** magit
+
+Try magit
+
+#+begin_src emacs-lisp
+  (use-package magit
+    :bind
+    ("C-x g" . magit-status)
+
+    :config
+    (use-package with-editor)
+
+    (setq magit-push-always-verify nil
+	  git-commit-summary-max-length 50)
+
+    (add-hook 'with-editor-mode-hook 'evil-insert-state))
+#+end_src
 
 #+BEGIN_SRC emacs-lisp 
 (server-start)
 #+END_SRC 
+
+* Misc
+
+#+BEGIN_SRC emacs-lisp
+  (setq exec-path (append exec-path '("/home/genius/go/bin/")))
+#+END_SRC
