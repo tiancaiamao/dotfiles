@@ -1,6 +1,7 @@
+#+TITLE: Emacs configuration
 #+AUTHOR: Arthur Mao
 #+EMAIL: tiancaiamao@gmail.com
-#+PROPERTY: header-args :results silent
+#+PROPERTY: header-args :results silent toc:nil
 
 * Setup =use-package=
 
@@ -28,7 +29,7 @@ Download and install evil,
 
 * UI Settings
 
-** Use a better theme than the default one
+** Use a better theme
 
 #+BEGIN_SRC emacs-lisp
   (use-package monokai-theme
@@ -64,8 +65,8 @@ Yes, I use evil, the VIM keybinding makes life easier!
   (use-package evil
     :init
     (setq evil-want-abbrev-expand-on-insert-exit nil
-	  ;; evil-want-C-u-scroll t
-	  ;; evil-want-integration t
+	  evil-want-C-u-scroll t
+	  evil-want-integration t
 	  ;; evil-collection will handle the key mapping, it requires this setting
 	  evil-want-keybinding nil
 	  )
@@ -125,6 +126,15 @@ The leader key binding!
     "gg" 'magit-status
     "p" 'projectile-command-map
     "oe" 'eshell
+    "mci" 'org-clock-in
+    "mco" 'org-clock-out
+    "mcg" 'org-clock-goto
+    "mcr" 'org-clock-report
+    "mc=" 'org-clock-display
+  "mt" 'org-todo
+  "ms" 'org-schedule
+  "md" 'org-done
+  "mq" 'org-set-tags-command
     )
 #+END_SRC
 
@@ -200,9 +210,6 @@ Try magit
 
 #+begin_src emacs-lisp
   (use-package magit
-    :bind
-    ("C-x g" . magit-status)
-
     :config
     (use-package with-editor)
 
