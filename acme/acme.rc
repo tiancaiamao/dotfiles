@@ -1,0 +1,43 @@
+#!/bin/sh
+
+SHELL=$PLAN9/bin/rc
+BROWSER=chrome
+PLUMBFILE=$HOME/lib/plumbing
+tabstop=4
+
+TERM=dumb
+
+# Get rid of backspace characters in Unix man output.
+PAGER=nobs
+
+# Plumb files instead of starting new editor.
+EDITOR=E
+unset FCEDIT VISUAL
+
+
+export BROWSER TERM PAGER EDITOR
+
+export tabstop
+
+[ -z "$(pgrep fontsrv)" ] && fontsrv;
+[ -z "$(pgrep plumber)" ] && plumber;
+
+if [ -f "$PLUMBFILE" ]; then
+	cat "$PLUMBFILE" | 9p write plumb/rules
+else
+	cat $PLAN9/plumb/basic | 9p write plumb/rules
+fi
+
+
+#font='/mnt/font/Lucida Grande/15a/font'
+#font='/mnt/font/Roboto Regular/14a/font'
+#font='/mnt/font/Noto Sans/13a/font'
+#font=/mnt/font/Cousine/8a/font
+#font=/mnt/font/WenQuanYiMicroHeiMono/13a/font
+#font=/mnt/font/Ubuntu/13a/font
+font=/mnt/font/NotoSansCJKhk-Regular/13a/font
+
+#lfont='/mnt/font/GoRegular/13a/font'
+lfont='/mnt/font/Ubuntu/13a/font'
+
+exec edwood -a -f $font -F $lfont $*

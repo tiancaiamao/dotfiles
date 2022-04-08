@@ -111,6 +111,7 @@ The leader key binding!
     "bd" 'kill-buffer
     "bp" 'previous-buffer
     "bn" 'next-buffer
+    "bc" 'switch-to-buffer
     "w" 'evil-window-map
     "w-" 'split-window-vertically
     "w/" 'split-window-horizontally
@@ -131,10 +132,10 @@ The leader key binding!
     "mcg" 'org-clock-goto
     "mcr" 'org-clock-report
     "mc=" 'org-clock-display
-  "mt" 'org-todo
-  "ms" 'org-schedule
-  "md" 'org-done
-  "mq" 'org-set-tags-command
+    "mt" 'org-todo
+    "ms" 'org-schedule
+    "md" 'org-done
+    "mq" 'org-set-tags-command
     )
 #+END_SRC
 
