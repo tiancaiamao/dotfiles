@@ -229,3 +229,15 @@ Try magit
 #+BEGIN_SRC emacs-lisp
   (setq exec-path (append exec-path '("/home/genius/go/bin/")))
 #+END_SRC
+
+This would make the 'e' shell alias focus on the new opened frame.
+
+#+BEGIN_SRC emacs-lisp
+(defun px-raise-frame-and-give-focus ()
+  (when window-system
+    (raise-frame)
+    (x-focus-frame (selected-frame))
+    (set-mouse-pixel-position (selected-frame) 4 4)
+    ))
+(add-hook 'server-switch-hook 'px-raise-frame-and-give-focus)
+#+END_SRC

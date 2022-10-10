@@ -3,7 +3,7 @@ source $HOME/.bin/git-completion.sh
 export ALTERNATE_EDITOR=""
 export BROWSER="firefox"
 export EDITOR="$HOME/.bin/em"
-export EMAIL="hello@harryrschwartz.com"
+#export EMAIL="hello@harryrschwartz.com"
 export GOPATH="$HOME/code/go"
 export GPG_TTY=$(tty)
 export HISTFILESIZE=20000
@@ -14,7 +14,7 @@ export NAME="Harry R. Schwartz"
 export PROMPT_DIRTRIM=3
 export TEXINPUTS=/home/hrs/.texmf:$TEXINPUTS
 export TEXMFHOME=/home/hrs/.texmf
-export Z3_EXE="/usr/bin/z3"
+#export Z3_EXE="/usr/bin/z3"
 
 # Don't spy on me, folks.
 export HOMEBREW_NO_ANALYTICS=1
@@ -28,11 +28,11 @@ source /etc/bash_completion.d/password-store
 [[ $PS1 && -f /usr/share/bash-completion/bash_completion ]] && \
     . /usr/share/bash-completion/bash_completion
 
-source /usr/local/share/chruby/chruby.sh
-source /usr/local/share/chruby/auto.sh
-chruby 3.0.1
+#source /usr/local/share/chruby/chruby.sh
+#source /usr/local/share/chruby/auto.sh
+#chruby 3.0.1
 
-source "$HOME/.cargo/env"
+#source "$HOME/.cargo/env"
 
 ### local config settings, if any
 
