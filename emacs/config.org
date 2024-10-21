@@ -76,7 +76,7 @@ Yes, I use evil, the VIM keybinding makes life easier!
 #+END_SRC
 
 
-package =evil-collection= comes with the magit evil keybinding.
+package =evil-collection= comes with the evil keybinding.
 
 #+begin_src emacs-lisp
   (use-package evil-collection
@@ -84,8 +84,6 @@ package =evil-collection= comes with the magit evil keybinding.
     :custom
     (evil-collection-setup-minibuffer t)
     :config
-    ;; (setq evil-collection-mode-list
-    ;;       '(ag dired magit mu4e which-key))
     (evil-collection-init))
 #+end_src
 
@@ -119,13 +117,14 @@ The leader key binding!
     "wk" 'windmove-up
     "wh" 'windmove-left
     "wl" 'windmove-right
-    "wd" 'delete-window
+    "wc" 'delete-window
     "ww" 'other-window
     "xk" 'kill-buffer
     "xf" 'find-file
     "50" 'delete-frame
-    "gg" 'magit-status
-    "p" 'projectile-command-map
+    "pg" 'project-find-regexp
+    "pc" 'project-compile
+    ;; "p" 'projectile-command-map
     "oe" 'eshell
     "mci" 'org-clock-in
     "mco" 'org-clock-out
@@ -196,7 +195,7 @@ The leader key binding!
 #+end_src
 
 * Project management
-
+  
 ** projectile 
 
 I'm not sure what it is for now, but I'll figure it out one day.
@@ -205,20 +204,6 @@ I'm not sure what it is for now, but I'll figure it out one day.
   (use-package projectile)
 #+END_SRC 
 
-** magit
-
-Try magit
-
-#+begin_src emacs-lisp
-  (use-package magit
-    :config
-    (use-package with-editor)
-
-    (setq magit-push-always-verify nil
-	  git-commit-summary-max-length 50)
-
-    (add-hook 'with-editor-mode-hook 'evil-insert-state))
-#+end_src
 
 #+BEGIN_SRC emacs-lisp 
 (server-start)
@@ -227,7 +212,9 @@ Try magit
 * Misc
 
 #+BEGIN_SRC emacs-lisp
-  (setq exec-path (append exec-path '("/home/genius/go/bin/")))
+  (exec-path-from-shell-initialize)
+  ;; (setq exec-path (append exec-path '("/home/genius/project/bin/")))
+  (setq exec-path (append exec-path '("/home/genius/project/go/bin/")))
 #+END_SRC
 
 This would make the 'e' shell alias focus on the new opened frame.
