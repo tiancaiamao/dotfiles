@@ -1,8 +1,9 @@
 -- basic edit
 vim.keymap.set('i', '<C-b>', "<Left>")
+vim.keymap.set('i', '<C-f>', "<Right>")
 
 -- project keymap
-vim.keymap.set('n', '<leader>pv', vim.cmd.Ex, {})
+vim.keymap.set('n', '<leader>pv', "<cmd>Oil<cr>", {})
 
 -- window operation kepmap
 vim.keymap.set('n', '<leader>w-', "<C-w>s", {})
@@ -22,3 +23,8 @@ vim.keymap.set('n', '<leader>fs', "<cmd>w<cr>", {})
 
 -- terminal mode keymap
 vim.keymap.set('t', '<esc>', '<C-\\><C-N>', {})
+
+-- quick fix
+vim.keymap.set('n', '<leader>co', "<cmd>copen<cr>", {})
+vim.keymap.set('n', '<leader>cn', "<cmd>cnext<cr>", {})
+vim.keymap.set('n', '<leader>cp', "<cmd>cprevious<cr>", {})
