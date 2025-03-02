@@ -57,6 +57,11 @@ Make the =yes or no= shorter.
   (fset 'yes-or-no-p 'y-or-n-p)
 #+END_SRC
 
+Always display line number.
+#+BEGIN_SRC emacs-lisp
+  (global-display-line-numbers-mode 1)
+#+END_SRC
+
 * Key Bindings
 
 Yes, I use evil, the VIM keybinding makes life easier!
@@ -204,12 +209,11 @@ I'm not sure what it is for now, but I'll figure it out one day.
   (use-package projectile)
 #+END_SRC 
 
+* Misc
 
 #+BEGIN_SRC emacs-lisp 
 (server-start)
 #+END_SRC 
-
-* Misc
 
 #+BEGIN_SRC emacs-lisp
   (exec-path-from-shell-initialize)
