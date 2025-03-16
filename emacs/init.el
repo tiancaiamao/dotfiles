@@ -6,7 +6,7 @@
 			 ("melpa"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")))
 (package-initialize)
 
-(org-babel-load-file "~/.emacs.d/config.org")
+(load-file "~/.emacs.d/config.el")
 
 (setq custom-file "~/.emacs.d/custom.el")
 (load-file custom-file)
