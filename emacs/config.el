@@ -36,6 +36,9 @@
 
 
 ;; ================== Key Bindings ======================
+;; When I use macosx
+(setq mac-command-modifier 'meta)
+
 ;; Yes, I use evil, the VIM keybinding makes life easier!
 (use-package evil
   :init
@@ -95,15 +98,6 @@
   ;; "p" 'projectile-command-map
   "oe" 'eshell
   "ot"  'vterm
-  ;; "mci" 'org-clock-in
-  ;; "mco" 'org-clock-out
-  ;; "mcg" 'org-clock-goto
-  ;; "mcr" 'org-clock-report
-  ;; "mc=" 'org-clock-display
-  ;; "mt"  'org-todo
-  ;; "ms" 'org-schedule
-  ;; "md" 'org-done
-  ;; "mq" 'org-set-tags-command
   )
 
 ;; =============== Programming language ============== 
