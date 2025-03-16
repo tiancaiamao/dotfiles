@@ -77,7 +77,11 @@ Yes, I use evil, the VIM keybinding makes life easier!
 	  )
 
     :config
-    (evil-mode 1))
+    (evil-mode 1)
+    (with-eval-after-load 'buff-menu
+      ;; in buffer-menu-mode, k should be bind by evil-mode
+      (define-key Buffer-menu-mode-map (kbd "k") nil)
+      ))
 #+END_SRC
 
 
@@ -124,22 +128,21 @@ The leader key binding!
     "wl" 'windmove-right
     "wc" 'delete-window
     "ww" 'other-window
-    "xk" 'kill-buffer
-    "xf" 'find-file
     "50" 'delete-frame
     "pg" 'project-find-regexp
     "pc" 'project-compile
     ;; "p" 'projectile-command-map
     "oe" 'eshell
-    "mci" 'org-clock-in
-    "mco" 'org-clock-out
-    "mcg" 'org-clock-goto
-    "mcr" 'org-clock-report
-    "mc=" 'org-clock-display
-    "mt" 'org-todo
-    "ms" 'org-schedule
-    "md" 'org-done
-    "mq" 'org-set-tags-command
+    "ot"  'vterm
+    ;; "mci" 'org-clock-in
+    ;; "mco" 'org-clock-out
+    ;; "mcg" 'org-clock-goto
+    ;; "mcr" 'org-clock-report
+    ;; "mc=" 'org-clock-display
+    ;; "mt"  'org-todo
+    ;; "ms" 'org-schedule
+    ;; "md" 'org-done
+    ;; "mq" 'org-set-tags-command
     )
 #+END_SRC
 
