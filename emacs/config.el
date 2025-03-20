@@ -139,7 +139,14 @@
 ;; Yaml
 (use-package yaml-mode)
 
-
+;; indent for C language
+(use-package editorconfig
+  :config
+  (add-hook 'c-mode-hook
+	    (lambda ()
+	      (setq c-basic-offset (if (eq indent-tabs-mode t)
+				       tab-width
+				     editorconfig-indentation)))))
 
 ;; ===================== Project management ===================
 ;; projectile 

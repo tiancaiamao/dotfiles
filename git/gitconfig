@@ -1,0 +1,10 @@
+[url "ssh://git@github.com/"]
+    insteadOf = https://github.com/
+[user]
+	name = tiancaiamao
+	email = tiancaiamao@gmail.com
+[http]
+	proxy = socks5://localhost:1180
+[core]
+	editor = emacsclient
+	# editor = ~/.local/bin/nvr --remote-wait-silent
