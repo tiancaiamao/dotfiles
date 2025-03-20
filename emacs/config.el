@@ -13,6 +13,12 @@
 (unless (package-installed-p 'evil)
   (package-install 'evil))
 
+(unless (package-installed-p 'vterm)
+  (package-install 'vterm))
+
+(unless (package-installed-p 'exec-path-from-shell)
+  (package-install 'exec-path-from-shell))
+
 ;; ==================== UI Settings ======================
 
 ;; Use a better theme
@@ -158,7 +164,7 @@
 
 (exec-path-from-shell-initialize)
 ;; (setq exec-path (append exec-path '("/home/genius/project/bin/")))
-(setq exec-path (append exec-path '("/home/genius/project/go/bin/")))
+;; (setq exec-path (append exec-path '("/home/genius/project/go/bin/")))
 
 ;; This would make the 'e' shell alias focus on the new opened frame.
 (defun px-raise-frame-and-give-focus ()
