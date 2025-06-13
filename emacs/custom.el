@@ -4,7 +4,11 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(editorconfig paredit gptel multi-vterm pyim vterm evil-collection evil-magit yaml-mode use-package s pyim-wbdict nim-mode monokai-theme markdown-mode magit go-projectile exec-path-from-shell evil-leader)))
+   '(editorconfig evil evil-collection evil-leader evil-magit
+		  exec-path-from-shell go-projectile gptel magit
+		  markdown-mode monokai-theme multi-vterm nim-mode
+		  paredit pyim pyim-wbdict rust-mode s use-package
+		  vterm yaml-mode)))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.

@@ -19,6 +19,9 @@
 (unless (package-installed-p 'exec-path-from-shell)
   (package-install 'exec-path-from-shell))
 
+(unless (package-installed-p 'monokai-theme)
+  (package-install 'monokai-theme))
+
 ;; ==================== UI Settings ======================
 
 ;; Use a better theme
@@ -108,8 +111,25 @@
 
 ;; =============== Programming language ============== 
 
+(setq eglot-server-programs nil)
+
 ;; Go
 (use-package go-mode)
+(add-to-list 'eglot-server-programs
+             '((go-mode go-ts-mode)
+               . ("gopls")))
+
+;; Rust
+(use-package rust-mode)
+(add-to-list 'eglot-server-programs
+             '((rust-ts-mode rust-mode) .
+               ("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
+;; (add-hook 'rust-mode-hook 'eglot-ensure)
+
+(use-package eglot
+  :ensure t
+  :hook ((rust-mode . eglot-ensure)
+	 (go-mode . eglot-ensure)))
 
 ;; Lisp
 (use-package elisp-mode
@@ -124,7 +144,8 @@
 
 (use-package lisp-mode
   :ensure nil
-  :mode ((rx ".eld" eos) . lisp-data-mode))
+  :mode (((rx ".eld" eos) . lisp-data-mode)
+	 ((rx ".cora" eos) . lisp-mode)))
 
 ;; Markdown
 (use-package markdown-mode
