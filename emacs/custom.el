@@ -8,7 +8,7 @@
 		  exec-path-from-shell go-projectile gptel magit
 		  markdown-mode monokai-theme multi-vterm nim-mode
 		  paredit pyim pyim-wbdict rust-mode s use-package
-		  vterm yaml-mode)))
+		  vterm yaml-mode zig-mode)))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.

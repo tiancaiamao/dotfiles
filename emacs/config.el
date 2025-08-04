@@ -124,11 +124,16 @@
 (add-to-list 'eglot-server-programs
              '((rust-ts-mode rust-mode) .
                ("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
-;; (add-hook 'rust-mode-hook 'eglot-ensure)
+
+;; zig
+(use-package zig-mode)
+(add-to-list 'eglot-server-programs
+	     '((zig-mode zig-ts-mode) . ("zls")))
 
 (use-package eglot
   :ensure t
-  :hook ((rust-mode . eglot-ensure)
+  :hook ((zig-mode . eglot-ensure)
+	 (rust-mode . eglot-ensure)
 	 (go-mode . eglot-ensure)))
 
 ;; Lisp
