@@ -121,9 +121,18 @@
 
 ;; Rust
 (use-package rust-mode)
-(add-to-list 'eglot-server-programs
-             '((rust-ts-mode rust-mode) .
-               ("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
+
+;; (add-to-list 'eglot-server-programs
+;; 	     '((rust-ts-mode rust-mode) .
+;; 	       ("rust-analyzer" :initializationOptions
+;; 		(:check (:command "clippy")
+;; 			:cargo (:targetDir "target/ra")))))
+
+(setq-default eglot-workspace-configuration
+	      '((:rust-analyzer
+		 (:cargo (:targetDir "target-ra"))
+		 (:procMacro (:enable t))
+		 (:check (:command "clippy")))))
 
 ;; zig
 (use-package zig-mode)
@@ -135,6 +144,7 @@
   :hook ((zig-mode . eglot-ensure)
 	 (rust-mode . eglot-ensure)
 	 (go-mode . eglot-ensure)))
+
 
 ;; Lisp
 (use-package elisp-mode
@@ -188,7 +198,23 @@
 
 ;; ===================== Misc ========================
 
-(exec-path-from-shell-initialize)
+(require 'cl-lib)
+
+(defun import-shell-environment (&optional shell)
+  "Import all environment variables from a login SHELL into Emacs."
+  (let* ((shell (or shell (getenv "SHELL") "/bin/bash"))
+	 (env-output (shell-command-to-string
+		      (concat shell " -l -c 'env'"))))
+    (dolist (line (split-string env-output "\n" t))
+      (let ((idx  (string-match "=" line)))
+	(when idx
+	  (let ((var (substring line 0 idx))
+		(val (substring line (1+ idx))))
+	    (setenv var val)))))))
+
+(import-shell-environment)
+
+;; (exec-path-from-shell-initialize)
 ;; (setq exec-path (append exec-path '("/home/genius/project/bin/")))
 ;; (setq exec-path (append exec-path '("/home/genius/project/go/bin/")))
 

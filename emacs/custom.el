@@ -4,11 +4,9 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(editorconfig evil evil-collection evil-leader evil-magit
-		  exec-path-from-shell go-projectile gptel magit
-		  markdown-mode monokai-theme multi-vterm nim-mode
-		  paredit pyim pyim-wbdict rust-mode s use-package
-		  vterm yaml-mode zig-mode)))
+   '(odin-mode tree-sitter editorconfig evil evil-collection evil-leader evil-magit exec-path-from-shell go-projectile gptel magit markdown-mode monokai-theme multi-vterm nim-mode paredit pyim pyim-wbdict rust-mode s use-package vterm yaml-mode zig-mode))
+ '(package-vc-selected-packages
+   '((odin-mode :vc-backend Git :url "https://git.sr.ht/~mgmarlow/odin-mode"))))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
