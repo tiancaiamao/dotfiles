@@ -91,8 +91,8 @@ minibuffer_hl = "#3E3549"
 # string = { fg = "#E1D995" }
 # type = { fg = "#85D6EC" }
 # variable = { fg = "#F8F8F3" }
-# "markup.italic" = { fg = "#F8F8F3", bg = "#1B1720", italic = true } 
-# "markup.bold" = { fg = "#F8F8F3", bg = "#1B1720", bold = true } 
+# "markup.italic" = { fg = "#F8F8F3", bg = "#1B1720", italic = true }
+# "markup.bold" = { fg = "#F8F8F3", bg = "#1B1720", bold = true }
 # "markup.heading" = { fg = "#8793B5", bold = true }
 # "markup.raw" = { fg = "#5F5D4F", italic = true }
 # "markup.quote" = { fg = "#957FB8", italic = true }
@@ -100,7 +100,7 @@ minibuffer_hl = "#3E3549"
 # "markup.link.label" = { fg = "#2D4F67", bold = true }
 # "markup.list.unchecked" = { fg = "#DCA561", bold = true }
 # "markup.list.checked" = { fg = "#85D6EC", bold = true }
-# "markup.list" = { fg = "#9CABCA", bg = "#1B1720", bold = true } 
+# "markup.list" = { fg = "#9CABCA", bg = "#1B1720", bold = true }
 # label = { fg = "#E6C384" }
 
 [colorscheme.syntax]
@@ -153,8 +153,16 @@ label = { fg = "#E6DB74" }  # same yellow
 "<space> w j" = { run = "next-window" }
 "<space> w k" = { run = "prev-window" }
 "<space> w l" = { run = "next-column" }
+# Buffer
+"<space> d b" = { run = "delete-buffer" }
+"<space> b p" = { run = "prev-buffer" }
+"<space> b n" = { run = "next-buffer" }
+"<space> b r" = { run = "reload-buffer" }
 # Toggle comment
 "<space> ;" = { run = "toggle-comment" }
+# Navigate
+"C-f" = { send_keys = "<page-down>" }
+"C-b" = { send_keys = "<page-up>" }
 
 
 # Filetype configuration
@@ -172,6 +180,9 @@ lsp.roots = [".git"]
 
 [filetypes.c]
 extensions = ["c", "h"]
+
+[filetypes.go]
+extensions = ["go"]
 
 [filetypes.dart]
 extensions = ["dart"]
@@ -218,7 +229,7 @@ lsp.command = "rust-analyzer"
 lsp.roots = ["Cargo.toml"]
 
 [filetypes.scheme]
-extensions = ["scm"]
+extensions = ["scm", "cora"]
 
 [filetypes.sql]
 extensions = ["sql"]

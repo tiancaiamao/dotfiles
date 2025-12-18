@@ -6,5 +6,7 @@
 [http]
 	proxy = socks5://localhost:1180
 [core]
-	editor = emacsclient
+	# editor = emacsclient
 	# editor = ~/.local/bin/nvr --remote-wait-silent
+	# editor = zed -w
+	editor = ad

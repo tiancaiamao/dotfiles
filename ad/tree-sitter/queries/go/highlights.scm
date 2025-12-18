@@ -48,8 +48,8 @@
 ;   (#lua-match? @constructor "^[nN]ew.+$"))
 
 ; ((call_expression
-;   (identifier) @constructor)
-;   (#lua-match? @constructor "^[mM]ake.+$"))
+;  (identifier) @constructor)
+;  (#lua-match? @constructor "^[mM]ake.+$"))
 
 ; Operators
 [
@@ -235,8 +235,8 @@
   (var_declaration))
 
 ; Spell
-((interpreted_string_literal) @spell
-  (#not-has-parent? @spell import_spec))
+; ((interpreted_string_literal) @spell
+;   (#not-has-parent? @spell import_spec))
 
 ; Regex
 (call_expression
