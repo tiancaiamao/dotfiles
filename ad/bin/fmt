@@ -11,6 +11,7 @@ case $maybext in
   dart) formatted=$(bufRead "$AD_BUFID" body | dart format) ;;
   json) formatted=$(bufRead "$AD_BUFID" body | jq) ;;
   rs) formatted=$(bufRead "$AD_BUFID" body | rustfmt --edition 2021) ;;
+  go) formatted=$(bufRead "$AD_BUFID" body | go fmt) ;;
   *) adError "no format rules found for '$maybext'" ;;
 esac
 

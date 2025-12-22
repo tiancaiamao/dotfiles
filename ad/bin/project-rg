@@ -1,0 +1,69 @@
+#!/usr/bin/env sh
+
+. "$HOME/.ad/lib/ad.sh"
+
+requireAd
+
+find_git_root() {
+    dir="$(pwd)"
+
+    while [ "$dir" != "/" ]; do
+        if [ -d "$dir/.git" ] || [ -f "$dir/.git" ]; then
+            echo "$dir"
+            return 0
+        fi
+        dir="$(dirname "$dir")"
+    done
+
+    return 1
+}
+
+relative_path() {
+    from="$1"
+    to="$2"
+
+    common="$from"
+    up=""
+
+    while [ "${to#"$common"}" = "$to" ]; do
+        common="$(dirname "$common")"
+        up="../$up"
+    done
+
+    down="${to#"$common"/}"
+    printf '%s\n' "$up"
+}
+
+detect_project_type() {
+    root="$1"
+
+    [ -f "$root/Cargo.toml" ] && echo rust && return
+    [ -f "$root/go.mod" ] && echo go && return
+    [ -f "$root/package.json" ] && echo node && return
+    [ -f "$root/pyproject.toml" ] && echo python && return
+    [ -f "$root/setup.py" ] && echo python && return
+    [ -f "$root/pom.xml" ] && echo java && return
+    [ -f "$root/build.gradle" ] && echo java && return
+    [ -f "$root/CMakeLists.txt" ] && echo cpp && return
+    [ -f "$root/build.zig" ] && echo zig && return
+
+    echo unknown
+}
+
+root="$(find_git_root)"
+rel="$(relative_path "$(pwd)" "$root")"
+type="$(detect_project_type "$root")"
+
+# echo $rel $root $type
+
+pattern="$(bufRead "$AD_BUFID" dot)"
+
+if [ "${#pattern}" -le 1 ]; then
+    pattern="$(minibufferPrompt "search> ")"
+fi
+
+# echo "hello ==" $pattern
+
+if [[ -n $pattern ]]; then
+    rg --vimgrep -t "$type" $pattern "$rel"
+fi

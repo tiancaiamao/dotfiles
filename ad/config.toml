@@ -154,7 +154,7 @@ label = { fg = "#E6DB74" }  # same yellow
 "<space> w k" = { run = "prev-window" }
 "<space> w l" = { run = "next-column" }
 # Buffer
-"<space> d b" = { run = "delete-buffer" }
+"<space> b d" = { run = "delete-buffer" }
 "<space> b p" = { run = "prev-buffer" }
 "<space> b n" = { run = "next-buffer" }
 "<space> b r" = { run = "reload-buffer" }
@@ -163,6 +163,8 @@ label = { fg = "#E6DB74" }  # same yellow
 # Navigate
 "C-f" = { send_keys = "<page-down>" }
 "C-b" = { send_keys = "<page-up>" }
+# Test
+"<space> p g" = { run = "project-rg" }
 
 
 # Filetype configuration
@@ -183,6 +185,9 @@ extensions = ["c", "h"]
 
 [filetypes.go]
 extensions = ["go"]
+lsp.command = "gopls"
+lsp.roots = ["go.mod", "go.work", ".git"]
+lsp.init_opts = { "gofumpt" = true, "staticcheck" = true }
 
 [filetypes.dart]
 extensions = ["dart"]
