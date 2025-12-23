@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# search-backward: Search backward for the current selection in ad
+# Usage: Bind this to a key in config.toml
+source "$HOME/.ad/lib/ad.sh"
+
+requireAd
+# Get current selection (dot content)
+selection="$(bufRead "$AD_BUFID" dot)"
+
+
+if [[ -z "$selection" ]]; then
+    adError "No selection to search for"
+fi
+
+# Use Edit command with reverse search
+adEdit "-/$selection/"
+adCtl "viewport-center"

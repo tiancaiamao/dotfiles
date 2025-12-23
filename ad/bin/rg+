@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+
+# rg --no-heading --color=never -n "$@"
+rg --no-heading --color=never --vimgrep "$@"
+
