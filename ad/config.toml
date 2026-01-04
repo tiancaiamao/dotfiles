@@ -166,7 +166,8 @@ label = { fg = "#E6DB74" }  # same yellow
 # Search
 "N" = { run = "search-backward" }
 "<space> p g" = { run = "project-rg" }
-
+# Open terminal
+"<space> o t" = { run = "tmux display-popup -E" }
 
 # Filetype configuration
 
