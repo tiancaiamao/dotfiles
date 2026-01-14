@@ -184,6 +184,9 @@ lsp.roots = [".git"]
 
 [filetypes.c]
 extensions = ["c", "h"]
+lsp.command = "clangd"
+lsp.args = ["--background-index"]
+lsp.roots = ["compile_commands.json", ".git", "Makefile", "CMakeLists.txt"]
 
 [filetypes.go]
 extensions = ["go"]
