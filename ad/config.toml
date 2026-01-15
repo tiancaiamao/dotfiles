@@ -183,7 +183,7 @@ lsp.args = ["start"]
 lsp.roots = [".git"]
 
 [filetypes.c]
-extensions = ["c", "h"]
+extensions = ["c", "h", "cpp"]
 lsp.command = "clangd"
 lsp.args = ["--background-index"]
 lsp.roots = ["compile_commands.json", ".git", "Makefile", "CMakeLists.txt"]
