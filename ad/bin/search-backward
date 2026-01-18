@@ -1,17 +1,56 @@
 #!/usr/bin/env bash
 # search-backward: Search backward for the current selection in ad
 # Usage: Bind this to a key in config.toml
+# Implements vim-style wrap search: if no match found, search from end of file
 source "$HOME/.ad/lib/ad.sh"
 
 requireAd
+
 # Get current selection (dot content)
 selection="$(bufRead "$AD_BUFID" dot)"
-
 
 if [[ -z "$selection" ]]; then
     adError "No selection to search for"
 fi
 
-# Use Edit command with reverse search
+# Save current position before searching
+old_addr="$(bufRead "$AD_BUFID" addr | tr -d '\n')"
+
+# Try normal backward search first
 adEdit "-/$selection/"
+new_addr="$(bufRead "$AD_BUFID" addr | tr -d '\n')"
+
+# Extract line number from address (format is y1:x1,y2:x2)
+# We check the first line number
+old_line="${old_addr%%:*}"
+new_line="${new_addr%%:*}"
+
+# Check if search failed:
+# - Position wrapped to very start (line 0 or 1) when we weren't already there
+# - Position didn't change at all (no match found)
+wrapped_to_start=false
+if [[ "$new_line" == "0" || "$new_line" == "1" ]]; then
+    if [[ "$old_line" != "0" && "$old_line" != "1" ]]; then
+        wrapped_to_start=true
+    fi
+fi
+
+if [[ "$wrapped_to_start" == "true" || "$new_addr" == "$old_addr" ]]; then
+    # Jump to end of file and search again
+    curToEof "$AD_BUFID"
+    adEdit "-/$selection/"
+    final_addr="$(bufRead "$AD_BUFID" addr | tr -d '\n')"
+
+    # Extract final line number
+    final_line="${final_addr%%:*}"
+
+    # If still at start after wrapping, the pattern truly doesn't exist
+    if [[ "$final_line" == "0" || "$final_line" == "1" ]]; then
+        # Restore original position
+        echo -n "$old_addr" | bufWrite "$AD_BUFID" addr
+        adError "Pattern not found: $selection"
+    fi
+fi
+
+# Center viewport on the match
 adCtl "viewport-center"
