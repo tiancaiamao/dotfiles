@@ -3,6 +3,7 @@ c //
 dart //
 graphql #
 just #
+go //
 make #
 plumbingrules #
 proto //
