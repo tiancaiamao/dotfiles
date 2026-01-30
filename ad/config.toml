@@ -143,6 +143,7 @@ label = { fg = "#E6DB74" }  # same yellow
 # Key mappings to programs that must be available on $PATH or commands.
 # ~/.ad/bin is auto-added to the path
 [keys.normal]
+"<space> f f" = { run = "open-via-shell" }
 "<space> F" = { run = "fmt" }
 ">" = { run = "indent" }
 "<" = { run = "unindent" }

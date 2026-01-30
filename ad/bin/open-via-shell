@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+. "$HOME/.ad/lib/ad.sh"
+requireAd
+
+tmp="$(mktemp)"
+script_file="$(mktemp)"
+cleanup() { rm -f "$tmp" "$script_file"; }
+trap cleanup EXIT
+
+export AD_OPEN_CWD="$(pwd)"
+
+# 使用 heredoc 避免转义地狱
+cat > "$script_file" << 'SCRIPT'
+cd "$AD_OPEN_CWD" || exit 1
+export PWD="$AD_OPEN_CWD"
+read -e -p "open file> " ad_path
+printf "%s\n" "$ad_path"
+SCRIPT
+
+cmd="bash -i $(printf '%q' "$script_file") > $(printf '%q' "$tmp")"
+
+if [ -n "${TMUX:-}" ] && command -v tmux >/dev/null 2>&1; then
+  # 使用 -d 参数设置 popup 的工作目录
+  tmux display-popup -d "$AD_OPEN_CWD" -E "$cmd"
+else
+  if [ -t 0 ] && [ -t 1 ]; then
+    eval "$cmd"
+  else
+    adError "open-via-shell: needs tmux or a TTY"
+  fi
+fi
+
+path="$(cat "$tmp" 2>/dev/null || true)"
+
+[ -n "$path" ] || exit 0
+
+case "$path" in
+  "~") path="$HOME" ;;
+  "~/"*) path="$HOME/${path#~/}" ;;
+esac
+
+# echo "open path ==" "$path"
+
+adCtl "open $path"
