@@ -38,7 +38,7 @@ path="$(cat "$tmp" 2>/dev/null || true)"
 
 case "$path" in
   "~") path="$HOME" ;;
-  "~/"*) path="$HOME/${path#~/}" ;;
+  "~/"*) path="$HOME/${path#\~/}" ;;
 esac
 
 # echo "open path ==" "$path"
