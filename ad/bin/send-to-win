@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# send-to-win - 将 ad 中选中的文本发送到 +win REPL buffer
+
+source "$HOME/.ad/lib/ad.sh"
+
+requireAd
+
+# 读取当前选中的文本（dot）
+DOT="$(bufRead "$AD_BUFID" dot)"
+
+if [ -z "$DOT" ]; then
+  adError "no text selected. Press 'v' to enter visual mode, then select text with hjkl"
+fi
+
+# 查找 +win buffer 的 ID
+BUFFER_INDEX="$(adIndex)"
+
+WIN_BUFFER_ID=""
+while IFS=$'\t' read -r buf_id buf_name; do
+  if [[ "$buf_name" == *"+win"* ]]; then
+    WIN_BUFFER_ID="$buf_id"
+    break
+  fi
+done <<< "$BUFFER_INDEX"
+
+if [ -z "$WIN_BUFFER_ID" ]; then
+  adError "+win buffer not found. Run win first"
+fi
+
+# 将选中内容写入 REPL buffer 的 body
+printf "> %s\n\n" "$DOT" | bufWrite "$WIN_BUFFER_ID" body
+
+# win 会在处理完命令后主动滚动视口
+adCtl "echo Sent to +win"

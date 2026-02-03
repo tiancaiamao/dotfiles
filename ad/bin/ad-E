@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# ad-E - Edit files in ad and wait for buffer deletion
+# Similar to Plan 9's E command for Acme
+#
+# Usage:
+#   export EDITOR=ad-E
+#   git commit  # will open ad and wait for you to delete the buffer
+
+set -e
+
+FILE="$1"
+
+# Check if file exists
+if [ ! -f "$FILE" ]; then
+    echo "ad-E: file not found: $FILE" >&2
+    exit 1
+fi
+
+# Get absolute path
+FILE=$(cd "$(dirname "$FILE")" && pwd)/$(basename "$FILE")
+
+# Function to check if ad is running
+ad_is_running() {
+    ad -9p ls ad >/dev/null 2>&1
+}
+
+# Function to list all open buffers from ad
+list_buffers() {
+    ad -9p ls ad/buffers 2>/dev/null || echo ""
+}
+
+# Function to find buffer ID for a file
+find_buffer_id() {
+    local file="$1"
+    local index
+
+    index=$(ad -9p read "ad/buffers/index" 2>/dev/null || echo "")
+
+    # Parse index to find matching buffer
+    # Format: "ID\tfilename\n"
+    while IFS=$'\t' read -r buf_id buf_file; do
+        if [ "$buf_file" = "$file" ]; then
+            echo "$buf_id"
+            return 0
+        fi
+    done <<< "$index"
+
+    return 1
+}
+
+# Check if ad is running
+if ! ad_is_running; then
+    # No ad instance running, start a new one and wait for it to exit
+    echo "ad-E: No running ad instance, starting new editor..." >&2
+    exec ad "$FILE"
+fi
+
+# ad is running, use 9p interface
+echo "ad-E: Using running ad instance" >&2
+
+# Check if file is already open
+if buf_id=$(find_buffer_id "$FILE"); then
+    echo "ad-E: File already open in ad (buffer $buf_id): $FILE" >&2
+    echo "ad-E: Delete the buffer when done editing" >&2
+else
+    # Open file in ad via ctl
+    echo "open $FILE" | ad -9p write "ad/ctl" 2>/dev/null
+
+    # Wait a bit for the buffer to be created
+    sleep 0.1
+
+    # Find the newly created buffer
+    if ! buf_id=$(find_buffer_id "$FILE"); then
+        echo "ad-E: Failed to open file in ad: $FILE" >&2
+        exit 1
+    fi
+
+    echo "ad-E: Editing $FILE (buffer $buf_id)" >&2
+    echo "ad-E: Press <space>b d to delete buffer when done" >&2
+fi
+
+# Wait for buffer to be deleted
+while true; do
+    if ! list_buffers | grep -q "^${buf_id}$"; then
+        # Buffer has been deleted
+        break
+    fi
+    sleep 0.5
+done
+
+# Done!
+exit 0

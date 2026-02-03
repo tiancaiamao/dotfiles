@@ -9,4 +9,4 @@
 	# editor = emacsclient
 	# editor = ~/.local/bin/nvr --remote-wait-silent
 	# editor = zed -w
-	editor = ad
+	editor = ad-E

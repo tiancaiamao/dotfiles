@@ -169,6 +169,9 @@ label = { fg = "#E6DB74" }  # same yellow
 "<space> p g" = { run = "project-rg" }
 # Open terminal
 "<space> o t" = { run = "tmux display-popup -E" }
+# send to win
+"<space> s w" = {run = "send-to-echo"}
+
 
 # Filetype configuration
 
