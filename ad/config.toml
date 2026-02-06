@@ -170,7 +170,9 @@ label = { fg = "#E6DB74" }  # same yellow
 # Open terminal
 "<space> o t" = { run = "tmux display-popup -E" }
 # send to win
-"<space> s w" = {run = "send-to-echo"}
+"<space> s w" = {run = "send-to-win"}
+# AI coding agent
+"<space> a i" = {run = "send-to-win +pi"}
 
 
 # Filetype configuration

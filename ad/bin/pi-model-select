@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# win-model-select - Select a pi model using ad minibuffer
+
+# set -euo pipefail
+
+source "$HOME/.ad/lib/ad.sh"
+
+requireAd
+
+# 1. Find the +pi buffer
+BUFFER_INDEX="$(adIndex)"
+WIN_BUFFER_ID=""
+while IFS=$'\t' read -r buf_id buf_name; do
+  if [[ "$buf_name" == *"+pi"* ]]; then
+    WIN_BUFFER_ID="$buf_id"
+    break
+  fi
+done <<< "$BUFFER_INDEX"
+
+if [ -z "$WIN_BUFFER_ID" ]; then
+  adError "+pi buffer not found. Run 'win --interp pi' first"
+fi
+
+# 2. Get available models using pi-get-models
+MODELS_RAW="$(~/.ad/bin/pi-get-models 2>/dev/null || true)"
+if [ -z "$MODELS_RAW" ]; then
+  MODELS_RAW=$(cat <<'FALLBACK'
+anthropic/claude-sonnet-4-20250514 - Claude Sonnet 4
+anthropic/claude-opus-4-20250514 - Claude Opus 4
+anthropic/claude-3-5-sonnet-20240620 - Claude 3.5 Sonnet
+anthropic/claude-3-5-haiku-20241022 - Claude 3.5 Haiku
+openai/gpt-4o - GPT-4o
+google/gemini-2.5-flash - Gemini 2.5 Flash
+FALLBACK
+  )
+fi
+
+# 3. Select from list using minibuffer
+MODEL_LINE=$(printf "%s\n" "$MODELS_RAW" | minibufferSelect "Model> ")
+
+if [ -z "$MODEL_LINE" ]; then
+  echo "Model selection cancelled."
+  exit 0
+fi
+
+# 4. Extract model ref (format: "provider/model-id - name")
+MODEL_REF=$(echo "$MODEL_LINE" | awk '{print $1}')
+
+if [ -z "$MODEL_REF" ]; then
+  echo "Invalid model selection."
+  exit 1
+fi
+
+# 5. Send set_model command to win
+printf ";; :win model %s\n\n" "$MODEL_REF" | bufWrite "$WIN_BUFFER_ID" body
+
+adCtl "echo Model set to: $MODEL_REF"
