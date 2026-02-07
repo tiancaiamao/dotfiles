@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# pi-session-select - Select a pi session using ad minibuffer
+
+# set -euo pipefail
+
+source "$HOME/.ad/lib/ad.sh"
+
+requireAd
+
+# 1. Find the +pi buffer
+BUFFER_INDEX="$(adIndex)"
+WIN_BUFFER_ID=""
+while IFS=$'\t' read -r buf_id buf_name; do
+  if [[ "$buf_name" == *"+pi"* ]]; then
+    WIN_BUFFER_ID="$buf_id"
+    break
+  fi
+done <<< "$BUFFER_INDEX"
+
+if [ -z "$WIN_BUFFER_ID" ]; then
+  adError "+pi buffer not found. Run 'win --interp pi' first"
+fi
+
+# 2. Get session directory
+SESSION_DIR="${PI_SESSION_DIR:-$HOME/.pi/agent/sessions}"
+if [ ! -d "$SESSION_DIR" ]; then
+  adError "Session directory not found: $SESSION_DIR"
+fi
+
+# 3. List all sessions from all subdirectories
+SESSIONS=$(
+  {
+    for dir in "$SESSION_DIR"/*/; do
+      if [ -d "$dir" ]; then
+        for file in "$dir"*.jsonl; do
+          if [ -f "$file" ]; then
+            # Extract timestamp from filename
+            filename=$(basename "$file")
+            timestamp=$(echo "$filename" | sed -E 's/^(.*T[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{3})Z_.*/\1/')
+            # Get file size in KB
+            size=$(du -h "$file" | cut -f1)
+            # Get modification time
+            mtime=$(date -r "$file" "+%Y-%m-%d %H:%M:%S")
+            # Format: timestamp [size] mtime full_path
+            echo "$timestamp | $size | $mtime | $file"
+          fi
+        done
+      fi
+    done
+  } 2>/dev/null | sort -r
+)
+
+if [ -z "$SESSIONS" ]; then
+  adError "No sessions found in $SESSION_DIR"
+fi
+
+# 4. Select from list using minibuffer
+SESSION_LINE=$(printf "%s\n" "$SESSIONS" | minibufferSelect "Session> ")
+
+if [ -z "$SESSION_LINE" ]; then
+  echo "Session selection cancelled."
+  exit 0
+fi
+
+# 5. Extract session path (4th field)
+SESSION_PATH=$(echo "$SESSION_LINE" | awk -F' | ' '{print $4}')
+
+if [ -z "$SESSION_PATH" ]; then
+  echo "Invalid session selection."
+  exit 1
+fi
+
+if [ ! -f "$SESSION_PATH" ]; then
+  echo "Session file not found: $SESSION_PATH"
+  exit 1
+fi
+
+# 6. Send /resume command to win with session path
+printf ";; /resume %s\n\n" "$SESSION_PATH" | bufWrite "$WIN_BUFFER_ID" body
+
+adCtl "echo Resuming session: $(basename "$SESSION_PATH")"

@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# pi-ctl - send control commands to a pi REPL buffer
+
+source "$HOME/.ad/lib/ad.sh"
+
+requireAd
+
+if [ $# -lt 1 ]; then
+  echo "usage: pi-ctl <command>"
+  echo ""
+  echo "Available commands (can use / or :win prefix):"
+  echo "  /session (:win session)       Show session state"
+  echo "  /messages (:win messages)     Show message history"
+  echo "  /commands (:win commands)     Show available commands (skills, prompts, extensions)"
+  echo "  /show-usage (:win show-usage) Show usage statistics"
+  echo "  /show-settings (:win show-settings) Show win display settings"
+  echo "  /model-select (:win model-select) Interactive model selection"
+  echo "  /new (:win new)               Start new session"
+  echo "  /resume (:win resume)         Resume from previous session"
+  echo "  /compact [text] (:win compact) Manually compact context"
+  echo "  /abort (:win abort)           Abort current operation"
+  echo "  /help (:win help)             Show help"
+  echo ""
+  echo "Example: pi-ctl /session"
+  echo "         pi-ctl /skill:cora (forwarded to pi as message)"
+  exit 1
+fi
+
+# Get the first argument (command)
+CMD="$1"
+ARGS="${@:2}"
+
+# Known win local commands - these should be rewritten to :win format
+WIN_COMMANDS="session messages commands show-usage show-settings model model-select new new-session resume compact abort copy quit thinking tools prefix thinking-level cycle-thinking-level help"
+
+# Rewrite /commands to :win commands (for win local commands only)
+if [[ "$CMD" == /* ]]; then
+  cmd_name="${CMD:1}"  # Remove leading /
+  # Check if this is a known win command
+  if [[ " $WIN_COMMANDS " =~ " $cmd_name " ]]; then
+    CMD=":win $cmd_name"
+  fi
+fi
+
+# Intercept :win model-select and :win resume commands
+case "$CMD" in
+  ":win model-select")
+    # Directly call the external script
+    exec ~/.ad/bin/pi-model-select
+    ;;
+  ":win resume")
+    if [ -n "$ARGS" ]; then
+      # Has session path argument, send to win
+      SEND_PREFIX="${SEND_PREFIX:-;; }"
+      CMD_FULL=":win resume $ARGS"
+    else
+      # No argument, call external script
+      exec ~/.ad/bin/pi-session-select
+    fi
+    ;;
+esac
+
+# Find pi buffer ID
+BUFFER_INDEX="$(adIndex)"
+PI_BUFFER_ID=""
+while IFS=$'\t' read -r buf_id buf_name; do
+  if [[ "$buf_name" == *"+pi"* ]]; then
+    PI_BUFFER_ID="$buf_id"
+    break
+  fi
+done <<< "$BUFFER_INDEX"
+
+if [ -z "$PI_BUFFER_ID" ]; then
+  adError "+pi buffer not found. Run win +pi first"
+fi
+
+SEND_PREFIX="${SEND_PREFIX:-;; }"
+
+# Use CMD_FULL if set (from /resume with args), otherwise use CMD
+if [ -n "${CMD_FULL:-}" ]; then
+  CMD_TO_SEND="$CMD_FULL"
+else
+  CMD_TO_SEND="$CMD ${ARGS:-}"
+fi
+
+printf "%s%s\n\n" "$SEND_PREFIX" "$CMD_TO_SEND" | bufWrite "$PI_BUFFER_ID" body
+
+adCtl "echo Sent control to +pi"
