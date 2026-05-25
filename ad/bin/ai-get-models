@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# ai-get-models - Query ai RPC and print available models as "provider/model-id - name"
+
+set -euo pipefail
+
+AI_CMD="${AI_CMD:-ai}"
+PYTHON_BIN="${PYTHON_BIN:-python3}"
+
+"$PYTHON_BIN" - <<'PY'
+import json
+import os
+import select
+import subprocess
+import sys
+import time
+
+cmd = os.environ.get("AI_CMD", "ai")
+try:
+    proc = subprocess.Popen(
+        [cmd, "--mode", "rpc"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        bufsize=1,
+    )
+except FileNotFoundError:
+    sys.stderr.write(f"ai not found: {cmd}\n")
+    sys.exit(1)
+
+try:
+    req = {"type": "get_available_models"}
+    proc.stdin.write(json.dumps(req) + "\n")
+    proc.stdin.flush()
+
+    deadline = time.time() + 8.0
+    while time.time() < deadline:
+        r, _, _ = select.select([proc.stdout], [], [], 0.25)
+        if not r:
+            continue
+        line = proc.stdout.readline()
+        if not line:
+            break
+        try:
+            obj = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if obj.get("type") == "response" and obj.get("command") == "get_available_models":
+            if not obj.get("success"):
+                sys.stderr.write((obj.get("error") or "unknown error") + "\n")
+                sys.exit(1)
+            models = obj.get("data", {}).get("models", [])
+            for m in models:
+                provider = m.get("provider") or ""
+                mid = m.get("id") or ""
+                name = m.get("name") or ""
+                ref = f"{provider}/{mid}" if provider and mid else (mid or provider)
+                if name:
+                    print(f"{ref} - {name}")
+                elif ref:
+                    print(ref)
+            sys.exit(0)
+
+    sys.stderr.write("timeout waiting for model list\n")
+    sys.exit(1)
+finally:
+    try:
+        proc.terminate()
+    except Exception:
+        pass
+PY

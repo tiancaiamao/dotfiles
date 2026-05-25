@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# ai-session-select - Select an ai session using ad minibuffer
+
+# set -euo pipefail
+
+source "$HOME/.ad/lib/ad.sh"
+
+requireAd
+
+# 1. Find the +ai buffer
+BUFFER_INDEX="$(adIndex)"
+WIN_BUFFER_ID=""
+while IFS=$'\t' read -r buf_id buf_name; do
+  if [[ "$buf_name" == *"+ai"* ]]; then
+    WIN_BUFFER_ID="$buf_id"
+    break
+  fi
+done <<< "$BUFFER_INDEX"
+
+if [ -z "$WIN_BUFFER_ID" ]; then
+  adError "+ai buffer not found. Run 'win --interp ai' first"
+fi
+
+# 2. Get session directory
+SESSION_DIR="${AI_SESSION_DIR:-$HOME/.ai}"
+if [ ! -d "$SESSION_DIR" ]; then
+  adError "Session directory not found: $SESSION_DIR"
+fi
+
+# 3. List all sessions in the directory
+SESSIONS=$(
+  {
+    shopt -s nullglob
+    for file in "$SESSION_DIR"/*.jsonl; do
+      if [ -f "$file" ]; then
+        filename=$(basename "$file")
+        size=$(du -h "$file" | cut -f1)
+        mtime=$(date -r "$file" "+%Y-%m-%d %H:%M:%S")
+        # Format: mtime | size | filename | full_path
+        echo "$mtime | $size | $filename | $file"
+      fi
+    done
+  } 2>/dev/null | sort -r
+)
+
+if [ -z "$SESSIONS" ]; then
+  adError "No sessions found in $SESSION_DIR"
+fi
+
+# 4. Select from list using minibuffer
+SESSION_LINE=$(printf "%s\n" "$SESSIONS" | minibufferSelect "Session> ")
+
+if [ -z "$SESSION_LINE" ]; then
+  echo "Session selection cancelled."
+  exit 0
+fi
+
+# 5. Extract session path (4th field)
+SESSION_PATH=$(echo "$SESSION_LINE" | awk -F' | ' '{print $4}')
+
+if [ -z "$SESSION_PATH" ]; then
+  echo "Invalid session selection."
+  exit 1
+fi
+
+if [ ! -f "$SESSION_PATH" ]; then
+  echo "Session file not found: $SESSION_PATH"
+  exit 1
+fi
+
+# 6. Send /resume command to win with session path
+printf ";; /resume %s\n\n" "$SESSION_PATH" | bufWrite "$WIN_BUFFER_ID" body
+
+adCtl "echo Resuming session: $(basename "$SESSION_PATH")"

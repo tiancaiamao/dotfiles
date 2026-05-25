@@ -43,4 +43,9 @@ esac
 
 # echo "open path ==" "$path"
 
-adCtl "open $path"
+# Pass target-client if AD_CLIENT_ID is set (from the TUI client that triggered this script)
+if [ -n "${AD_CLIENT_ID:-}" ]; then
+  adCtl "open --target-client=$AD_CLIENT_ID $path"
+else
+  adCtl "open $path"
+fi

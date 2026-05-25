@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Usage:
+#   project-rg-tmux <socket_name_or_path> <buffer_id>
+#
+# Opens a tmux popup with rg+fzf project search and jumps to selected location in ad.
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  echo "Usage: project-rg-tmux <socket> <buffer_id>"
+  exit 0
+fi
+
+SOCKET="${1:-ad}"
+BUFID="${2:-}"
+
+if [[ -z "$BUFID" || ! "$BUFID" =~ ^[0-9]+$ ]]; then
+  echo "project-rg-tmux: missing or invalid buffer_id" >&2
+  exit 2
+fi
+
+for bin in ad tmux fzf rg; do
+  if ! command -v "$bin" >/dev/null 2>&1; then
+    echo "project-rg-tmux: required command not found: $bin" >&2
+    exit 2
+  fi
+done
+
+read_9p() {
+  ad -9p read "${SOCKET}/$1"
+}
+
+write_9p() {
+  local path="$1"
+  local val="$2"
+  printf '%s' "$val" | ad -9p write "${SOCKET}/${path}"
+}
+
+buffer_filename="$(read_9p "buffers/${BUFID}/filename" 2>/dev/null | tr -d '\n' || true)"
+if [[ -n "$buffer_filename" && "$buffer_filename" != "[No Name]" && "$buffer_filename" != +* ]]; then
+  if [[ -d "$buffer_filename" ]]; then
+    search_base="$buffer_filename"
+  else
+    search_base="$(dirname "$buffer_filename")"
+  fi
+else
+  search_base="$(pwd)"
+fi
+
+if ! root="$(git -C "$search_base" rev-parse --show-toplevel 2>/dev/null)"; then
+  root="$search_base"
+fi
+
+query="$(read_9p "buffers/${BUFID}/dot" 2>/dev/null | tr '\n' ' ' | sed 's/[[:space:]]\+$//' || true)"
+
+selection_file="$(mktemp -t ad-project-rg-selection.XXXXXX)"
+popup_script="$(mktemp -t ad-project-rg-popup.XXXXXX)"
+trap 'rm -f "$selection_file" "$popup_script"' EXIT
+
+cat >"$popup_script" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$1"
+QUERY="$2"
+OUT="$3"
+
+cd "$ROOT"
+
+preview_cmd='bat --style=plain --color=always --highlight-line {2} -- {1} 2>/dev/null || sed -n "1,200p" -- {1} 2>/dev/null'
+reload_cmd='rg --vimgrep --smart-case --hidden --glob "!.git" -- {q} . 2>/dev/null || true'
+initial_cmd='rg --vimgrep --smart-case --hidden --glob "!.git" -- "$QUERY" . 2>/dev/null || true'
+
+choice="$(
+  fzf \
+    --ansi \
+    --layout=reverse \
+    --height=100% \
+    --border \
+    --prompt='rg> ' \
+    --delimiter=':' \
+    --with-nth=1,2,3,4.. \
+    --phony \
+    --query "$QUERY" \
+    --preview "$preview_cmd" \
+    --bind "start:reload:$initial_cmd" \
+    --bind "change:reload:$reload_cmd" \
+    || true
+)"
+
+[[ -n "$choice" ]] || exit 0
+printf '%s' "$choice" > "$OUT"
+EOF
+
+chmod +x "$popup_script"
+
+tmux display-popup -E -w 92% -h 84% \
+  "bash '$popup_script' '$root' '$query' '$selection_file'"
+
+if [[ ! -s "$selection_file" ]]; then
+  exit 0
+fi
+
+sel="$(cat "$selection_file")"
+file="${sel%%:*}"
+rest="${sel#*:}"
+line="${rest%%:*}"
+rest="${rest#*:}"
+col="${rest%%:*}"
+
+if [[ -z "$file" || -z "$line" || ! "$line" =~ ^[0-9]+$ ]]; then
+  echo "project-rg-tmux: malformed selection: $sel" >&2
+  exit 1
+fi
+
+if [[ "$file" != /* ]]; then
+  file="${root}/${file}"
+fi
+
+if [[ -z "$col" || ! "$col" =~ ^[0-9]+$ ]]; then
+  col=1
+fi
+
+write_9p "ctl" "b ${BUFID}"
+write_9p "ctl" "o ${file}"
+new_id="$(read_9p "buffers/current" | tr -d '\n' || true)"
+
+if [[ "$new_id" =~ ^[0-9]+$ ]]; then
+  write_9p "buffers/${new_id}/addr" "${line}:${col}"
+fi

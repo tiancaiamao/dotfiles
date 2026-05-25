@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# ai-send - read bound AI info and send selected text to AI
+# Binding is looked up by AD_PID from ~/.ad/bindings/
+
+source "$HOME/.ad/lib/ad.sh"
+requireAd
+
+set -u
+
+DOT="$(bufRead "$AD_BUFID" dot)"
+if [[ -z "$DOT" ]]; then
+  adError "no text selected. Press 'v' to enter visual mode, then select text with hjkl"
+fi
+
+# Primary: lookup by AD_PID in fixed location
+BOUND_FILE="$HOME/.ad/bindings/${AD_PID}"
+
+# Fallback: search from current dir upward (legacy .ai-bound files)
+if [[ ! -f "$BOUND_FILE" ]]; then
+  LEGACY_FILE=""
+  INSTANCE_FILE_NAME=".ai-bound.${AD_PID}"
+  LEGACY_FILE_NAME=".ai-bound"
+  SEARCH_DIR="$PWD"
+  while [[ "$SEARCH_DIR" != "/" ]]; do
+    if [[ -f "$SEARCH_DIR/$INSTANCE_FILE_NAME" ]]; then
+      LEGACY_FILE="$SEARCH_DIR/$INSTANCE_FILE_NAME"
+      break
+    fi
+    if [[ -z "$LEGACY_FILE" && -f "$SEARCH_DIR/$LEGACY_FILE_NAME" ]]; then
+      LEGACY_FILE="$SEARCH_DIR/$LEGACY_FILE_NAME"
+    fi
+    SEARCH_DIR="$(dirname "$SEARCH_DIR")"
+  done
+  BOUND_FILE="$LEGACY_FILE"
+fi
+
+if [[ -z "$BOUND_FILE" ]]; then
+  adError "no bound AI found. Use '<space> a b' first"
+fi
+
+AI_ID="$(jq -r '.ai_id' "$BOUND_FILE" 2>/dev/null)"
+if [[ -z "$AI_ID" || "$AI_ID" == "null" ]]; then
+  adError "invalid bound file: cannot read ai_id from $BOUND_FILE"
+fi
+
+send_err_file="$(mktemp "/tmp/ai-send.err.XXXXXX")"
+if ! printf "%s\n" "$DOT" | ai send --id "$AI_ID" >/dev/null 2>"$send_err_file"; then
+  err_msg="$(tr '\n' ' ' < "$send_err_file" | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+  rm -f "$send_err_file"
+  if [[ -z "$err_msg" ]]; then
+    err_msg="unknown error"
+  fi
+  adError "failed to send to AI ($AI_ID): $err_msg"
+fi
+rm -f "$send_err_file"
+
+AI_NAME="$(jq -r '.ai_name // "unnamed"' "$BOUND_FILE")"
+adCtl "echo Sent to AI: $AI_NAME (PID ${AD_PID})"

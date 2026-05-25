@@ -172,7 +172,8 @@ label = { fg = "#E6DB74" }  # same yellow
 # send to win
 "<space> s w" = {run = "send-to-win"}
 # AI coding agent
-"<space> a i" = {run = "send-to-win +ai"}
+"<space> a i" = {run = "ai-send"}
+"<space> a b" = {run = "ai-bind"}
 
 
 # Filetype configuration
