@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+
+source "$HOME/.ad/lib/ad.sh"
+requireAd
+
+set -u
+
+for cmd in ai jq fzf; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    adError "missing dependency: $cmd"
+  fi
+done
+
+CURRENT_DIR="$PWD"
+AI_LIST="$(ai ls --json 2>/dev/null || echo '[]')"
+
+if ! echo "$AI_LIST" | jq -e 'type == "array" and length > 0' >/dev/null 2>&1; then
+  adError "no running AI instances found. Please start 'ai serve' first"
+fi
+
+tmpdir="$(mktemp -d "/tmp/ai-bind.XXXXXX")"
+display_file="$tmpdir/display.tsv"
+selection_file="$tmpdir/selection.txt"
+selector_script="$tmpdir/selector.sh"
+
+cleanup() {
+  rm -rf "$tmpdir"
+}
+trap cleanup EXIT
+
+{
+  printf "ID\tSTATUS\tCWD\tAGE\n"
+  echo "$AI_LIST" | jq -r '.[] | [.id, .status, .cwd, .age] | @tsv' | while IFS=$'\t' read -r id status cwd age; do
+    case "$status" in
+      running) status=$'\033[32mrunning\033[0m' ;;
+      done) status=$'\033[90mdone\033[0m' ;;
+      failed) status=$'\033[31mfailed\033[0m' ;;
+      killed) status=$'\033[33mkilled\033[0m' ;;
+    esac
+    printf "%s\t%s\t%s\t%s\n" "$id" "$status" "$cwd" "$age"
+  done
+} > "$display_file"
+
+cat > "$selector_script" << EOF
+#!/usr/bin/env bash
+set -u
+selection=\$(fzf --header-lines=1 --ansi --delimiter=\$'\t' --prompt='Select AI instance to bind: ' --header='Use arrows + Enter' < "$display_file" || true)
+if [[ -n "\$selection" ]]; then
+  printf '%s\n' "\$selection" > "$selection_file"
+else
+  : > "$selection_file"
+fi
+EOF
+chmod +x "$selector_script"
+
+if [[ -n "${TMUX:-}" ]] && command -v tmux >/dev/null 2>&1; then
+  sync_chan="ai-bind-$PPID-$$-$(date +%s)"
+  cat >> "$selector_script" << EOF
+tmux wait-for -S "$sync_chan"
+EOF
+  tmux display-popup -E "$selector_script"
+  tmux wait-for "$sync_chan"
+else
+  "$selector_script"
+fi
+
+if [[ ! -s "$selection_file" ]]; then
+  adError "no AI instance selected"
+fi
+
+selected_line="$(cat "$selection_file")"
+IFS=$'\t' read -r selected_id _ <<< "$selected_line"
+
+if [[ -z "$selected_id" ]]; then
+  adError "failed to parse selected AI ID"
+fi
+
+AI_INFO="$(echo "$AI_LIST" | jq -e --arg id "$selected_id" '.[] | select(.id == $id)' 2>/dev/null || true)"
+if [[ -z "$AI_INFO" ]]; then
+  adError "selected AI instance not found: $selected_id"
+fi
+
+AI_NAME="$(echo "$AI_INFO" | jq -r '.name // "unnamed"')"
+AI_CWD="$(echo "$AI_INFO" | jq -r '.cwd // "unknown"')"
+
+jq -n \
+  --arg ai_id "$selected_id" \
+  --arg ai_name "$AI_NAME" \
+  --arg ai_cwd "$AI_CWD" \
+  --arg bound_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  --arg bound_by "$(whoami)" \
+  '{ai_id:$ai_id, ai_name:$ai_name, ai_cwd:$ai_cwd, bound_at:$bound_at, bound_by:$bound_by}' \
+  > "$CURRENT_DIR/.ai-bound"
+
+adCtl "echo Bound to AI: $selected_id ($AI_NAME in $AI_CWD)"

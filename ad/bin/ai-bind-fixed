@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# ai-bind - 绑定当前目录到一个 AI 实例
+
+source "$HOME/.ad/lib/ad.sh"
+
+requireAd
+
+# 颜色化状态的函数
+colorize_status() {
+  local status="$1"
+  case "$status" in
+    "running")
+      echo -e "\x1b[32m$status\x1b[0m" # green
+      ;;
+    "done")
+      echo -e "\x1b[90m$status\x1b[0m" # gray
+      ;;
+    "failed")
+      echo -e "\x1b[31m$status\x1b[0m" # red
+      ;;
+    "killed")
+      echo -e "\x1b[33m$status\x1b[0m" # yellow
+      ;;
+    *)
+      echo "$status"
+      ;;
+  esac
+}
+
+# 获取当前目录
+CURRENT_DIR="$(pwd)"
+
+# 获取可用的 AI 实例列表
+AI_LIST=$(ai ls --json 2>/dev/null || echo "[]")
+
+# 检查是否有可用的 AI 实例
+if [[ "$AI_LIST" == "[]" ]] || [[ -z "$AI_LIST" ]]; then
+  adError "no running AI instances found. Please start 'ai serve' first"
+fi
+
+# 创建临时文件
+> /tmp/ai-list-formatted.txt
+> /tmp/ai-list-with-header.txt
+
+# 解析 JSON 并显示选择菜单，格式与 ai ls 相同（带颜色）
+echo "$AI_LIST" | jq -r '.[] | "\(.id)\t\(.status)\t\(.cwd)\t\(.age)"' | while IFS=$'\t' read -r id status cwd age; do
+  colored_status=$(colorize_status "$status")
+  printf "%s\t%s\t%s\t%s\n" "$id" "$colored_status" "$cwd" "$age" >> /tmp/ai-list-formatted.txt
+done
+
+# 添加表头
+echo -e "ID\tSTATUS\tCWD\tAGE" | cat - /tmp/ai-list-formatted.txt > /tmp/ai-list-with-header.txt
+
+# 使用 tmux popup 显示选择菜单（显示所有列）
+SELECTED=$(tmux popup -E "cat /tmp/ai-list-with-header.txt | fzf --header-lines=1 --ansi --delimiter='\t' --prompt='Select AI instance to bind: ' | cut -d $'\t' -f1)
+
+# 清理临时文件
+rm -f /tmp/ai-list-formatted.txt /tmp/ai-list-with-header.txt
+
+# 调试信息（如果需要的话，可以取消注释下面这行）
+# echo "DEBUG: Selected AI ID: '$SELECTED'" >&2
+
+if [[ -z "$SELECTED" ]]; then
+  adError "no AI instance selected"
+fi
+
+# 获取 AI 实例详情
+AI_INFO=$(echo "$AI_LIST" | jq -r ".[] | select(.id == \"$SELECTED\")")
+
+# 从 AI_INFO 中提取信息
+AI_NAME_JSON=$(echo "$AI_INFO" | jq -r '.name // "unnamed"' | jq -R .)
+AI_CWD_JSON=$(echo "$AI_INFO" | jq -r '.cwd // "unknown"' | jq -R .)
+
+# 创建 .ai-bound 文件
+cat > "$CURRENT_DIR/.ai-bound" << EOF
+{
+  "ai_id": "$SELECTED",
+  "ai_name": $AI_NAME_JSON,
+  "ai_cwd": $AI_CWD_JSON,
+  "bound_at": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+  "bound_by": "$(whoami)"
+}
+EOF
+
+AI_NAME=$(echo "$AI_INFO" | jq -r '.name // "unnamed"')
+AI_CWD=$(echo "$AI_INFO" | jq -r '.cwd // "unknown"')
+
+adCtl "echo Bound to AI: $SELECTED ($AI_NAME in $AI_CWD)"
